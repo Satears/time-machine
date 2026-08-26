@@ -1,0 +1,68 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "sqlite"
+}
+
+/// 歌手
+model Artist {
+  id        String   @id @default(cuid())
+  name      String
+  nameEn    String?
+  avatar    String?
+  bio       String?
+  birthYear Int?
+  debutYear Int?
+  genre     String?
+  songs     Song[]
+  createdAt DateTime @default(now())
+
+  @@index([name])
+}
+
+/// 歌曲
+model Song {
+  id        String    @id @default(cuid())
+  title     String
+  album     String?
+  year      Int
+  duration  Int?
+  cover     String?
+  audioUrl  String?
+  lyrics    String?
+  likes     Int       @default(0)
+  plays     Int       @default(0)
+  artist    Artist    @relation(fields: [artistId], references: [id], onDelete: Cascade)
+  artistId  String
+  comments  Comment[]
+  createdAt DateTime  @default(now())
+
+  @@index([year])
+  @@index([title])
+}
+
+/// 年代大事记（时光隧道）
+model DecadeEvent {
+  id      String @id @default(cuid())
+  decade  Int
+  year    Int
+  title   String
+  content String
+
+  @@index([decade])
+}
+
+/// 乐迷评论
+model Comment {
+  id        String   @id @default(cuid())
+  content   String
+  nickname  String
+  song      Song     @relation(fields: [songId], references: [id], onDelete: Cascade)
+  songId    String
+  createdAt DateTime @default(now())
+
+  @@index([songId])
+}
