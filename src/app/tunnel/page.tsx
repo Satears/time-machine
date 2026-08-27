@@ -23,7 +23,7 @@ export default async function TunnelPage({
   const { decade: decadeParam } = await searchParams;
   const active = DECADES.includes(Number(decadeParam)) ? Number(decadeParam) : 1980;
 
-  const [events, songs, allEvents] = await Promise.all([
+  const [events, songs] = await Promise.all([
     prisma.decadeEvent.findMany({
       where: { decade: active },
       orderBy: { year: "asc" },
@@ -33,7 +33,6 @@ export default async function TunnelPage({
       orderBy: [{ year: "asc" }, { plays: "desc" }],
       include: { artist: { select: { name: true } } },
     }),
-    prisma.decadeEvent.findMany({ orderBy: { year: "asc" } }),
   ]);
 
   const decadeSongs: SongRowItem[] = songs.map((s) => ({

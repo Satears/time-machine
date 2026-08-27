@@ -44,3 +44,10 @@ next-env.d.ts
 /prisma/dev.db*
 /src/generated/
 
+.vercel
+.env*
+
+# CLI homes with credentials
+.vercel-home/
+.iga-home/
+.iga/

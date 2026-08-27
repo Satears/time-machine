@@ -12,22 +12,34 @@ interface SongActionsProps {
 
 const FAV_KEY = "glsj-favs";
 
+function readFavFromStorage(songId: string): boolean {
+  if (typeof window === "undefined") return false;
+  try {
+    const favs: string[] = JSON.parse(localStorage.getItem(FAV_KEY) ?? "[]");
+    return favs.includes(songId);
+  } catch {
+    return false;
+  }
+}
+
 export function SongActions({ song, initialLikes, plays }: SongActionsProps) {
   const { playSong, isPlaying, current, toggle } = usePlayer();
   const [likes, setLikes] = useState(initialLikes);
   const [liked, setLiked] = useState(false);
   const [liking, setLiking] = useState(false);
-  const [fav, setFav] = useState(false);
+  const [fav, setFav] = useState<boolean>(() => readFavFromStorage(song.id));
 
   const isCurrent = current?.id === song.id;
 
+  // song 切换时重新读取收藏状态（微任务避免同步 setState 导致的级联渲染告警）
   useEffect(() => {
-    try {
-      const favs: string[] = JSON.parse(localStorage.getItem(FAV_KEY) ?? "[]");
-      setFav(favs.includes(song.id));
-    } catch {
-      /* ignore */
-    }
+    let cancelled = false;
+    queueMicrotask(() => {
+      if (!cancelled) setFav(readFavFromStorage(song.id));
+    });
+    return () => {
+      cancelled = true;
+    };
   }, [song.id]);
 
   const toggleLike = async () => {

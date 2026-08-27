@@ -98,7 +98,7 @@ export default async function SongDetailPage({
           {/* 金句/点评 */}
           {song.lyrics && (
             <div className="relative mt-8 overflow-hidden rounded-2xl border border-gold/20 bg-gradient-to-br from-ink-3 to-ink-2 p-5 sm:mt-10 sm:p-6">
-              <span className="pointer-events-none absolute -right-6 -top-8 font-calli text-8xl text-gold/10">"</span>
+              <span className="pointer-events-none absolute -right-6 -top-8 font-calli text-8xl text-gold/10">&ldquo;</span>
               <p className="text-[10px] tracking-[0.25em] text-cream/40 sm:text-xs sm:tracking-[0.3em]">这首歌 · 一句话</p>
               <p className="mt-3 font-display text-base leading-relaxed text-gold-light sm:text-lg">
                 {song.lyrics}
