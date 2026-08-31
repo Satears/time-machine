@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { prisma } from "@/lib/prisma";
+import { prisma, withDbRetry } from "@/lib/prisma";
 import { SongList, type SongRowItem } from "@/components/SongRow";
 
 const DECADES = [1970, 1980, 1990, 2000, 2010, 2020];
@@ -23,17 +23,19 @@ export default async function TunnelPage({
   const { decade: decadeParam } = await searchParams;
   const active = DECADES.includes(Number(decadeParam)) ? Number(decadeParam) : 1980;
 
-  const [events, songs] = await Promise.all([
-    prisma.decadeEvent.findMany({
-      where: { decade: active },
-      orderBy: { year: "asc" },
-    }),
-    prisma.song.findMany({
-      where: { year: { gte: active, lt: active + 10 } },
-      orderBy: [{ year: "asc" }, { plays: "desc" }],
-      include: { artist: { select: { name: true } } },
-    }),
-  ]);
+  const [events, songs] = await withDbRetry(() =>
+    Promise.all([
+      prisma.decadeEvent.findMany({
+        where: { decade: active },
+        orderBy: { year: "asc" },
+      }),
+      prisma.song.findMany({
+        where: { year: { gte: active, lt: active + 10 } },
+        orderBy: [{ year: "asc" }, { plays: "desc" }],
+        include: { artist: { select: { name: true } } },
+      }),
+    ])
+  );
 
   const decadeSongs: SongRowItem[] = songs.map((s) => ({
     id: s.id,

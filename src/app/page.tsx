@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { prisma } from "@/lib/prisma";
+import { prisma, withDbRetry } from "@/lib/prisma";
 import { SectionTitle } from "@/components/SectionTitle";
 import { SongList, type SongRowItem } from "@/components/SongRow";
 import { ArtistCard, type ArtistCardItem } from "@/components/ArtistCard";
@@ -29,20 +29,23 @@ const DECADES = [
 export const dynamic = "force-dynamic";
 
 export default async function HomePage() {
-  const [topSongs, topArtists, songCount, artistCount] = await Promise.all([
-    prisma.song.findMany({
-      orderBy: { plays: "desc" },
-      take: 8,
-      include: { artist: { select: { name: true } } },
-    }),
-    prisma.artist.findMany({
-      orderBy: { songs: { _count: "desc" } },
-      take: 8,
-      include: { _count: { select: { songs: true } } },
-    }),
-    prisma.song.count(),
-    prisma.artist.count(),
-  ]);
+  const [topSongs, topArtists, songCount, artistCount] = await withDbRetry(
+    () =>
+      Promise.all([
+        prisma.song.findMany({
+          orderBy: { plays: "desc" },
+          take: 8,
+          include: { artist: { select: { name: true } } },
+        }),
+        prisma.artist.findMany({
+          orderBy: { songs: { _count: "desc" } },
+          take: 8,
+          include: { _count: { select: { songs: true } } },
+        }),
+        prisma.song.count(),
+        prisma.artist.count(),
+      ])
+  );
 
   const hotSongs: SongRowItem[] = topSongs.map((s) => ({
     id: s.id,

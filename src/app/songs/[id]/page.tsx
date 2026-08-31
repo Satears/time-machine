@@ -1,6 +1,6 @@
 import { notFound } from "next/navigation";
 import Link from "next/link";
-import { prisma } from "@/lib/prisma";
+import { prisma, withDbRetry } from "@/lib/prisma";
 import { formatDuration } from "@/lib/utils";
 import { Cover } from "@/components/Cover";
 import { SongActions } from "@/components/song/SongActions";
@@ -18,13 +18,15 @@ export default async function SongDetailPage({
 }) {
   const { id } = await params;
 
-  const song = await prisma.song.findUnique({
-    where: { id },
-    include: {
-      artist: { select: { id: true, name: true, debutYear: true } },
-      comments: { orderBy: { createdAt: "desc" } },
-    },
-  });
+  const song = await withDbRetry(() =>
+    prisma.song.findUnique({
+      where: { id },
+      include: {
+        artist: { select: { id: true, name: true, debutYear: true } },
+        comments: { orderBy: { createdAt: "desc" } },
+      },
+    })
+  );
 
   if (!song) notFound();
 

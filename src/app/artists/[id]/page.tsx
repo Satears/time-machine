@@ -1,6 +1,6 @@
 import { notFound } from "next/navigation";
 import Link from "next/link";
-import { prisma } from "@/lib/prisma";
+import { prisma, withDbRetry } from "@/lib/prisma";
 import { Cover } from "@/components/Cover";
 import { SongList, type SongRowItem } from "@/components/SongRow";
 
@@ -13,14 +13,16 @@ export default async function ArtistDetailPage({
 }) {
   const { id } = await params;
 
-  const artist = await prisma.artist.findUnique({
-    where: { id },
-    include: {
-      songs: {
-        orderBy: [{ year: "asc" }, { plays: "desc" }],
+  const artist = await withDbRetry(() =>
+    prisma.artist.findUnique({
+      where: { id },
+      include: {
+        songs: {
+          orderBy: [{ year: "asc" }, { plays: "desc" }],
+        },
       },
-    },
-  });
+    })
+  );
 
   if (!artist) notFound();
 

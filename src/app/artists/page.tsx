@@ -1,4 +1,4 @@
-import { prisma } from "@/lib/prisma";
+import { prisma, withDbRetry } from "@/lib/prisma";
 import { SearchBar } from "@/components/SearchBar";
 import { ArtistCard, type ArtistCardItem } from "@/components/ArtistCard";
 
@@ -12,19 +12,21 @@ export default async function ArtistsPage({
   const { q = "" } = await searchParams;
   const keyword = q.trim();
 
-  const artists = await prisma.artist.findMany({
-    where: keyword
-      ? {
-          OR: [
-            { name: { contains: keyword } },
-            { nameEn: { contains: keyword } },
-            { genre: { contains: keyword } },
-          ],
-        }
-      : undefined,
-    orderBy: [{ debutYear: "asc" }],
-    include: { _count: { select: { songs: true } } },
-  });
+  const artists = await withDbRetry(() =>
+    prisma.artist.findMany({
+      where: keyword
+        ? {
+            OR: [
+              { name: { contains: keyword } },
+              { nameEn: { contains: keyword } },
+              { genre: { contains: keyword } },
+            ],
+          }
+        : undefined,
+      orderBy: [{ debutYear: "asc" }],
+      include: { _count: { select: { songs: true } } },
+    })
+  );
 
   const items: ArtistCardItem[] = artists.map((a) => ({
     id: a.id,

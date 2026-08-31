@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { prisma } from "@/lib/prisma";
+import { prisma, withDbRetry } from "@/lib/prisma";
 import { SearchBar } from "@/components/SearchBar";
 import { SortSelect } from "@/components/SortSelect";
 import { SongList, type SongRowItem } from "@/components/SongRow";
@@ -43,11 +43,13 @@ export default async function SongsPage({
             ? { title: "asc" }
             : { plays: "desc" };
 
-  const songs = await prisma.song.findMany({
-    where,
-    orderBy,
-    include: { artist: { select: { name: true } } },
-  });
+  const songs = await withDbRetry(() =>
+    prisma.song.findMany({
+      where,
+      orderBy,
+      include: { artist: { select: { name: true } } },
+    })
+  );
 
   const items: SongRowItem[] = songs.map((s) => ({
     id: s.id,
